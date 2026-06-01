@@ -16,10 +16,11 @@ function onLoginSubmit(event) {
   const username = event.target[0].value;
   const password = event.target[1].value;
   event.preventDefault();
-  fetch("/api/user/fakelogin", {
+  fetch("/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
+      "X-XSRF-TOKEN": getCsrfToken()
     },
     body: new URLSearchParams({username, password}),
   })
@@ -31,8 +32,15 @@ function onLoginSubmit(event) {
 
 function onLogoutSubmit(event) {
   event.preventDefault();
-  window.sessionStorage.removeItem("fullname");
-  loginCheck();
+  fetch('/logout', {
+    method: 'POST',
+    headers: { "X-XSRF-TOKEN": getCsrfToken()}
+  })
+      .then(filterOk)
+      .then(() => {
+        window.sessionStorage.removeItem("fullname");
+        loginCheck();
+      })
 }
 
 function onBlogSubmit(event) {
@@ -42,6 +50,7 @@ function onBlogSubmit(event) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "X-XSRF-TOKEN": getCsrfToken()
     },
     body: JSON.stringify(data),
   })
@@ -68,17 +77,28 @@ function fetchBlogs() {
 
 function renderBlogs(blogs) {
   const blogDiv = document.getElementById("blog-container");
-  blogDiv.innerHTML = "" // clear
+  blogDiv.replaceChildren();
   for (const blog of blogs) {
-    blogDiv.innerHTML += `<h2>${blog.title}</h2>
-            <p>${blog.createdAt}</p>
-            <p>${blog.body}</p>`;
+    const title = document.createElement("h2");
+    title.textContent = blog.title;
+    const date = document.createElement("p");
+    date.textContent = blog.createdAt;
+    const body = document.createElement("p");
+    body.textContent = blog.body;
+    blogDiv.append(title, date, body);
   }
 }
+
 
 function showDevError(message) {
   document.getElementById("devToastText").textContent = message;
   devToast.show();
+}
+
+function getCsrfToken() {
+  return document.cookie.split("; ")
+      .find(c => c.startsWith("XSRF-TOKEN="))
+      ?.split("=")[1];
 }
 
 function filterOk(response) {

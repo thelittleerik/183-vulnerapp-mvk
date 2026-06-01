@@ -14,8 +14,8 @@ spring:
         - file:src/main/resources/static/
         - classpath:/static/
     error:
-      include-stacktrace: on_param
-      include-message: always
+      include-stacktrace: never
+      include-message: never
 logging:
   pattern:
     dateformat: HH:mm:ss
@@ -27,4 +27,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: '*'
+        include: health
+  endpoint:
+    health:
+      show-details: when_authorized
